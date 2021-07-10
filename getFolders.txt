@@ -1,0 +1,39 @@
+//This function prints all the names of your folders into the Log of Apps Script (via Ctrl+ENTER)
+
+function GetDamnFolders() {
+  var folders = DriveApp.getFolders();
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    Logger.log(folder.getName());
+    Logger.log(folder.getId());
+  }
+}
+ //in line 7 instead of getName you have a lot of options, check them out (about sharing, adding users, adding features to the folder,...)
+
+    //Logger.log(folder.addEditor(emailAddress)
+    //Logger.log(folder.addEditor(user)
+    //Logger.log(folder.addEditors(emailAddresses)
+    //Logger.log(folder.addViewer(emailAddress)
+    //Logger.log(folder.addViewer(user)
+    //Logger.log(folder.addViewers(emailAddresses)
+    //Logger.log(folder.createFile(name, content, mimeType)
+    //Logger.log(folder.createFolder(name)
+    //Logger.log(folder.createShortcut(targetId)
+    //Logger.log(folder.getAccess(email)
+    //Logger.log(folder.getAccess(user)
+    //Logger.log(folder.getDateCreated()
+    //Logger.log(folder.getDescription()
+    //Logger.log(folder.getEditors()
+    //Logger.log(folder.getFiles()
+    //Logger.log(folder.getId()
+    //Logger.log(folder.getLastUpdated()
+    //Logger.log(folder.getName()
+    //Logger.log(folder.getOwner()
+    //Logger.log(folder.getSharingAccess()
+    //Logger.log(folder.getSharingPermission()
+    //Logger.log(folder.getUrl()
+    //Logger.log(folder.getViewers()
+    //Logger.log(folder.moveTo(destination)
+    //Logger.log(folder.removeEditor(emailAddress)
+    //Logger.log(folder.revokePermissions(user)
+    //Logger.log(folder.setSharing(accessType, permissionType)

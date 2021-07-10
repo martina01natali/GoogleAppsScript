@@ -1,0 +1,24 @@
+/*
+This function provides an easy way to copy all the files inside a source folder into a preexisting target folder of choice. Source and target folders must be identified by their IDs. A .txt file is created in the target folder with the names of the copied files. Warning: the Log document is made new at each run.
+ */
+function run() {
+  var sourceID = "1Lzn3faKabmwuCtrDwJxllI1WMX3iOuFo";
+  var targetID = "1HWWg38YhAnoWWGCONnPiH8EGUREJ9Mdn";
+  copyDamnFiles(sourceID, targetID);
+}
+
+function copyDamnFiles(sourceID, targetID) {
+  var source = DriveApp.getFolderById(sourceID);
+  var target = DriveApp.getFolderById(targetID);
+  var files = source.getFiles();
+  var fileNames = "Copied files\n";
+
+  while (files.hasNext()){
+    var file = files.next();
+    var name = file.getName();
+    fileNames += name+"\n";
+    var f = file.makeCopy(name,target);
+    Logger.log(name);
+  }
+  var doc = target.createFile("Log",fileNames, MimeType.PLAIN_TEXT);
+}

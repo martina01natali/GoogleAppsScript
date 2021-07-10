@@ -1,0 +1,20 @@
+function DocInRootFolderWithFileNames() {
+  var fileNames = "";
+  var folders = DriveApp.getFoldersByName("Tutorato"); //opens a FolderIterator that goes on every folder with given name
+  while (folders.hasNext()) { //open itaration to access every folder of given name
+    var folder = folders.next(); //.next() tells you to stay where you are and operate on the specific file or folder (here definition of var folder is only to simplify the code)
+    var parent = folder.getParents().next();
+    var files = folder.getFiles();
+    fileNames += "Parent directory: " + parent + "\n"; //I'm not iterating so I'm only getting the first parent directory
+    fileNames += "Directory: " + folder.getName() + " ID: " + folder.getId() + "\n";
+    fileNames += "Files:\n";
+    while (files.hasNext()) {
+      var file = files.next();
+      fileNames += file.getName()+"\n";
+    }
+    fileNames += "\n";
+    //var doc = folder.createFile("Log", fileNames, MimeType.PLAIN_TEXT); //this is to save in a specific folder
+  }
+  var doc = DriveApp.createFile("Log", fileNames, MimeType.PLAIN_TEXT) //here I am saving it in the root folder (My Drive)
+  //instead of PLAIN_TEXT you can use a lot of different type of files  
+}
