@@ -1,0 +1,176 @@
+function make_new_quiz() {
+/*
+  This script allows you to create a quiz form on the basis of a given question bank, spreadsheet to chose the
+  questions and a given standard quiz template of your choice.
+  The new quiz form created is saved in the same folder as the parent file.
+  CAREFUL! THE CREATION OF THE FORM IS BASED ON A CONTROL ON THE SCRIPT (IMPOSING TITLE, DESCRIPTION, ETC)
+  If you want to make your spreadsheet your main reference for such parameters, you have to use functions such
+  as getValues instead of setValue (see below, some functions are already there and commented).
+  Refer to https://github.com/mattbellis/using-Google-Forms-quizzes-with-a-testbank/blob/master/README.md for more
+  
+  Need some help to get you started with Apps Script features?
+  Get all the details on the official documentation, https://developers.google.com/apps-script/reference
+  
+
+  This script accesses your own Google Drive documents by their ID. 
+  The ID is a unique identifier for each file. You can grab it from the URL
+  for the document. For instance, if the URL reads...
+       https://script.google.com/a/siena.edu/d/1rACPT_W6E2u9taMKEIf2IijP6onTUtAyurojSB5di3MCd4deZsgS3KZK/edit?usp=drive_web
+  
+  then the ID is the string of numbers in the middle
+       1rACPT_W6E2u9taMKEIf2IijP6onTUtAyurojSB5di3MCd4deZsgS3KZK
+*/
+  // First, set values to the "Quiz Maker" spreadsheet (the quiz-maker instructions, not question bank) and the Form
+  
+  // How many questions do you want? nq = number of questions
+  var nq = 10;
+  // Set title of form
+  var title = 'Test OFA 9';
+  // Set title of new Quiz_Maker spreadsheet (linked to the new form you're creating)
+  var title_maker = 'QuizMaker 3';
+  // Set description of form
+  var description = 'Esame di idoneità per il superamento OFA. 1 punto per ogni risposta corretta, 0 punti per ogni risposta sbagliata o non data.';
+  // Set a confirmation message at the end of the form
+  var confirmmess = "Grazie. Il tuo esame è stato registrato. Clicca qui sotto per visualizzare il risultato: l'idoneità è assegnata con un punteggio minimo di 6/10.";
+
+  // Next, define the IDs of your documents: you need to copy and paste them here.
+
+  // Here is the Google Sheets that has all your questions.
+  var question_bank_ID = '1ROqC-WgJQfabIFPSdP5mjpKs6haQQ1NBju6RDXCiIhI'
+  
+  // Here is the Google Sheets that you edit each time by changing the values in the script and running
+  // the script, which randomply chooses the number of the questions and prints it on the quiz_maker
+  // If you're controlling everything from the script, thik of this spreadsheet as a reminder copy of your quiz
+  var quiz_maker_ID = '1SgZ5Lc2cn9gc64q2dOvHqdvbCIlvwOn6S1lfkn1DlS4'
+  
+  // Here is the Google Forms Quiz template that will get copied over each time you want to make a new quiz. 
+  var quiz_template_ID = '1tOtZDQe1AS1vA5UsaNdVWTVAc4mPQphlkv4jLuZOXGE'
+
+  // Make a copy of the quiz_maker spreadsheet and open it, open the quiz_bank and make a copy of the form template.
+
+  var get_maker = DriveApp.getFileById(quiz_maker_ID);
+  var copy_maker = get_maker.makeCopy(title_maker);
+  var copy_maker_ID = copy_maker.getId();
+  var sscq = SpreadsheetApp.openById(copy_maker_ID);
+  var sheetcq = sscq.getSheets()[0];
+
+ // Set the values on the quiz_maker
+  sheetcq.getRange(1,2,1,1).setValue(title);
+  sheetcq.getRange(2,2,1,1).setValue(description); 
+  sheetcq.getRange(3,2,1,1).setValue(nq);
+  sheetcq.getRange(5,2,1,1).setValue(confirmmess);
+
+/*  IF YOU'RE CHANGING PARAMETERS FROM THE SPREADSHEET, USE THE 4 LINES OF CODE BELOW AND COMMENT THE ABOVE ONES
+ (startrow, startColumn, numRows, numColumns), return a 2D array
+ Adding [0][0] takes the value on the specific cell only (returns a string)
+  var title = sheetcq.getSheetValues(1,2,1,1)[0][0]; 
+  var description = sheetcq.getSheetValues(2,2,1,1)[0][0];
+  var nq = sheetcq.getSheetValues(3,2,1,1)[0];
+  var confirmmess = sheetcq.getSheetValues(5,2,1,1)[0][0];
+
+ NEED AUTHORIZATION on
+  https://www.googleapis.com/auth/spreadsheets.currentonly
+  https://www.googleapis.com/auth/spreadsheets
+
+  One can use as well (instead ot getSheetValues):
+  var range = sheetcq.getRange(1, 1, 3, 3);
+  values = range.getValues();
+  Logger.log(values);
+*/
+
+  var ss = SpreadsheetApp.openById(question_bank_ID);
+  var sheet = ss.getSheets()[0];
+
+/* Now we can make a copy of our master quiz. Be aware that all this functions may require additional authorizations. Make sure the quiz template you're copying has all the options that you want (such as Quiz mode, registration of person by email address and such); you can find all additional settings in the "Settings" icon at top right in the editing mode of the form.
+*/
+
+  var quiz_form = DriveApp.getFileById(quiz_template_ID);
+  var quiz = quiz_form.makeCopy(title);
+  var id = quiz.getId();
+    
+  var form = FormApp.openById(id);
+    
+  // If your template already have a fixed title and confirmation message you can comment and skip all of this
+  form.setTitle(title).setDescription(description).setConfirmationMessage(confirmmess);
+
+/* Now we retrieve the number of questions in the bank (qLen). Then we create an array of nq numbers that are the indexes of the questions in the bank. The numbers are randomly chosen. The chosen indexes then are written on the quiz_maker.
+*/
+
+  var qArray = sheet.getRange("A1").getDataRegion(SpreadsheetApp.Dimension.ROWS).getValues();
+  var qLen = qArray.length -1;
+  var questions = random_questions(nq, qLen);
+
+  //Next two lines can be used to append one customary question to the vector to try things
+  //var questions = random_questions(nq-1, qLen);
+  //questions.push(97);
+
+  for (var i=0;i<nq;i++) {
+    sheetcq.getRange(4,2+i,1,1).setValue(questions[i]);
+  }
+
+/* Next lines are for checking */
+  //Logger.log(qArray);
+  Logger.log('Number of questions in the bank =', qLen);
+  Logger.log('Title =', title);
+  Logger.log('Description =', description);
+  Logger.log('Indexes of questions =', questions);
+
+/* Creating the form: add the questions from the bank and build the form. Answers' key is included. */
+
+  for (var i=0;i<nq;i++) {
+    // startRow, startColumn, numRows, numColumns
+    var text = sheet.getSheetValues(questions[i]+1, 2, 1, 1)[0][0]; // startRow is question[i]+1 because question 1 is on row 2.
+    var qtype = sheet.getSheetValues(questions[i]+1, 3, 1, 1)[0][0];
+    var desc = sheet.getSheetValues(questions[i]+1, 4, 1, 1)[0][0];
+    var options = sheet.getSheetValues(questions[i]+1, 5, 1, 4)[0]; // Fixed on a maximum of 4 options per question
+    
+    var anskey = sheet.getSheetValues(questions[i]+1,9, 1, 4)[0];
+    var ansA = Boolean(anskey[0].toString()=='1');
+    var ansB = Boolean(anskey[1].toString()=='1');
+    var ansC = Boolean(anskey[2].toString()=='1');
+    var ansD = Boolean(anskey[3].toString()=='1');
+/*
+    Logger.log(text);
+    Logger.log(anskey);
+    Logger.log(options);
+    Logger.log(ansA, ansB, ansC, ansD);
+*/
+    if(qtype=='MC'){ // Multiple choice
+      var item = form.addMultipleChoiceItem();
+      item.setTitle(text.toString())
+      .setPoints(1)
+      .setHelpText(desc.toString())
+      .setChoices([
+        item.createChoice(options[0].toString(),ansA),
+        item.createChoice(options[1].toString(),ansB),
+        item.createChoice(options[2].toString(),ansC),
+        item.createChoice(options[3].toString(),ansD)
+      ])
+    }
+
+    else if(qtype=='CB'){ // Checkbox
+      var item = form.addCheckboxItem()
+      .setTitle(text)
+      .setHelpText(desc)
+      .setChoiceValues(options);
+    }
+    else if(qtype=='IU'){ // Image by URL
+      var img = UrlFetchApp.fetch(text);
+      var item = form.addImageItem()
+      .setTitle(desc)
+      .setHelpText(desc)
+      .setImage(img)
+      .setWidth(300) // Hard code the image width for now
+    }
+    else if(qtype=='ID'){ // Image from Drive, looking for ID
+      var img = DriveApp.getFileById(text).getBlob();
+      Logger.log(text);
+      Logger.log(img);
+      var item = form.addImageItem()
+      .setTitle(desc)
+      .setHelpText(desc)
+      .setImage(img)
+      .setWidth(300); // Hard code the image width for now.
+    }
+  }
+}

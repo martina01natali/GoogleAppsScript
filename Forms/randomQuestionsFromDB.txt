@@ -1,0 +1,29 @@
+function random_questions(quizLength, bankLength) {
+
+  // This function allows you to create an array of arbitrary dimension (quizLength) of random numbers, chosen in a given interval       
+  // (bankLength), and returns the array.
+
+  let chosen = [];
+
+ while(chosen.length<quizLength) {
+    var index = Math.floor(Math.random()*Math.floor(bankLength-2)+1);
+    chosen.push(index);
+  }
+
+  //  Logger.log('Initial random = ', chosen);
+  var sorted = chosen.sort();  // Elements in the array are ordered (ascending)
+  //  Logger.log('Random sorted =', sorted);
+
+  var i=0;
+  
+  for (var i=0; i<quizLength; i++) {
+    var j=i+1;
+    if (sorted[i]==sorted[j]) {
+      sorted[j] += 3;
+      i -= 3;
+    };
+    sorted.sort();
+  }
+  // Logger.log('Final array =', sorted);
+ return sorted;
+}
